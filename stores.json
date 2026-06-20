@@ -1,0 +1,14 @@
+[
+  {
+    "id": "store_001",
+    "name": "سوبر ماركت النيل",
+    "username": "nile_market",
+    "password": "$2b$10$G9s4NzzV0WdxjLKql24WmOGe8NnBhg741MGcivSQoTrX09iZn/KLi"
+  },
+  {
+    "id": "store_002",
+    "name": "محل ملابس الأناقة",
+    "username": "elegance_store",
+    "password": "$2b$10$G9s4NzzV0WdxjLKql24WmOGe8NnBhg741MGcivSQoTrX09iZn/KLi"
+  }
+]

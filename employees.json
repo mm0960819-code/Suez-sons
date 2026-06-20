@@ -1,0 +1,35 @@
+[
+  {
+    "id": "emp_001",
+    "store_id": "store_001",
+    "name": "أحمد محمد علي",
+    "username": "ahmed_nile",
+    "password": "$2b$10$G9s4NzzV0WdxjLKql24WmOGe8NnBhg741MGcivSQoTrX09iZn/KLi",
+    "salary": 4500,
+    "debt": 500,
+    "schedule": "السبت - الخميس | 9ص - 5م",
+    "last_request": "سلفة 500 جنيه"
+  },
+  {
+    "id": "emp_002",
+    "store_id": "store_001",
+    "name": "محمد عبدالله حسن",
+    "username": "mohamed_nile",
+    "password": "$2b$10$G9s4NzzV0WdxjLKql24WmOGe8NnBhg741MGcivSQoTrX09iZn/KLi",
+    "salary": 3800,
+    "debt": 0,
+    "schedule": "الأحد - الخميس | 10ص - 6م",
+    "last_request": "لا يوجد"
+  },
+  {
+    "id": "emp_003",
+    "store_id": "store_002",
+    "name": "سارة خالد إبراهيم",
+    "username": "sara_elegance",
+    "password": "$2b$10$G9s4NzzV0WdxjLKql24WmOGe8NnBhg741MGcivSQoTrX09iZn/KLi",
+    "salary": 5000,
+    "debt": 1200,
+    "schedule": "السبت - الأربعاء | 11ص - 7م",
+    "last_request": "إجازة 3 أيام"
+  }
+]

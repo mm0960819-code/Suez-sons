@@ -1,0 +1,42 @@
+[
+  {
+    "username": "mo",
+    "shop": "سوبر ماركت الأمانة",
+    "total": 1500,
+    "paid": 1000,
+    "remaining": 500,
+    "date": "2024-05-20"
+  },
+  {
+    "username": "mo",
+    "shop": "محل هدايا ومصنوعات",
+    "total": 300,
+    "paid": 300,
+    "remaining": 0,
+    "date": "2024-05-21"
+  },
+  {
+    "username": "ali",
+    "shop": "صيدلية الشفاء",
+    "total": 250,
+    "paid": 100,
+    "remaining": 150,
+    "date": "2024-05-22"
+  },
+  {
+    "username": "mo",
+    "shop": "sand",
+    "total": 7,
+    "paid": 3,
+    "remaining": 4,
+    "date": "2026-05-22"
+  },
+  {
+    "username": "ali",
+    "shop": "sand",
+    "total": 488,
+    "paid": 43,
+    "remaining": 445,
+    "date": "2026-05-05"
+  }
+]

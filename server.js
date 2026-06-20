@@ -6,6 +6,9 @@ const db = require('./db');
 
 const app = express();
 
+// ===== Trust Railway Proxy =====
+app.set('trust proxy', 1);
+
 // ===== Middleware =====
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -13,22 +16,23 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'suez-sons-secret-change-in-production',
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 8 }
+    cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 1000 * 60 * 60 * 8 },
+    proxy: true
 }));
 
 // ===== Helper Functions =====
 const genId = (prefix) => prefix + '_' + Date.now().toString(36);
 
 // ===== Auth Middleware =====
-const requireAdmin    = (req, res, next) => req.session.adminUser ? next() : res.status(401).json({ error: 'غير مصرح' });
-const requireStore    = (req, res, next) => req.session.storeUser ? next() : res.status(401).json({ error: 'غير مصرح' });
-const requireEmployee = (req, res, next) => req.session.empUser   ? next() : res.status(401).json({ error: 'غير مصرح' });
+const requireAdmin = (req, res, next) => req.session.adminUser ? next() : res.status(401).json({ error: 'غير مصرح' });
+const requireStore = (req, res, next) => req.session.storeUser ? next() : res.status(401).json({ error: 'غير مصرح' });
+const requireEmployee = (req, res, next) => req.session.empUser ? next() : res.status(401).json({ error: 'غير مصرح' });
 
 // ===== Protect HTML pages =====
-app.get('/dashboard.html',         (req, res, next) => req.session.adminUser ? next() : res.redirect('/login.html?type=admin&error=1'));
-app.get('/admin.html',             (req, res, next) => req.session.adminUser === 'mo' ? next() : res.redirect('/login.html?type=admin&error=1'));
-app.get('/store-dashboard.html',   (req, res, next) => req.session.storeUser ? next() : res.redirect('/login.html?type=store&error=1'));
-app.get('/employee-dashboard.html',(req, res, next) => req.session.empUser   ? next() : res.redirect('/login.html?type=employee&error=1'));
+app.get('/dashboard.html', (req, res, next) => req.session.adminUser ? next() : res.redirect('/login.html?type=admin&error=1'));
+app.get('/admin.html', (req, res, next) => req.session.adminUser === 'mo' ? next() : res.redirect('/login.html?type=admin&error=1'));
+app.get('/store-dashboard.html', (req, res, next) => req.session.storeUser ? next() : res.redirect('/login.html?type=store&error=1'));
+app.get('/employee-dashboard.html', (req, res, next) => req.session.empUser ? next() : res.redirect('/login.html?type=employee&error=1'));
 
 // ===== LOGIN: Admin =====
 app.post('/login/admin', async (req, res) => {
@@ -132,7 +136,7 @@ app.post('/admin/add-purchase', requireAdmin, (req, res) => {
     if (!username || !shop || isNaN(total) || !date) return res.status(400).json({ error: 'بيانات ناقصة' });
     const totalN = Number(total), paidN = Number(paid) || 0;
     if (paidN > totalN) return res.status(400).json({ error: 'المدفوع أكبر من الإجمالي' });
-    
+
     db.addPurchase(username.trim().toLowerCase(), shop.trim(), totalN, paidN, Math.max(0, totalN - paidN), date);
     db.logActivity(req.session.adminUser, 'ADD_PURCHASE', `إضافة عملية توريد: ${shop}`);
     res.json({ ok: true });
@@ -148,9 +152,9 @@ app.post('/admin/add-store', requireAdmin, async (req, res) => {
     if (req.session.adminUser !== 'mo') return res.status(403).json({ error: 'غير مصرح' });
     const { name, username, password } = req.body;
     if (!name || !username || !password) return res.status(400).json({ error: 'بيانات ناقصة' });
-    
+
     if (db.findStoreByUsername(username.trim().toLowerCase())) return res.status(400).json({ error: 'اسم المستخدم موجود' });
-    
+
     const hashed = await bcrypt.hash(password, 10);
     db.addStore(genId('store'), name.trim(), username.trim().toLowerCase(), hashed);
     db.logActivity(req.session.adminUser, 'ADD_STORE', `إضافة محل: ${name}`);
@@ -174,10 +178,10 @@ app.post('/admin/add-employee', requireAdmin, async (req, res) => {
     if (req.session.adminUser !== 'mo') return res.status(403).json({ error: 'غير مصرح' });
     const { name, store_id, username, password, salary, debt, schedule, last_request } = req.body;
     if (!name || !store_id || !username || !password) return res.status(400).json({ error: 'بيانات ناقصة' });
-    
+
     if (!db.findStoreById(store_id)) return res.status(400).json({ error: 'ID المحل غير موجود' });
     if (db.findEmployeeByUsername(username.trim().toLowerCase())) return res.status(400).json({ error: 'اسم المستخدم موجود' });
-    
+
     const hashed = await bcrypt.hash(password, 10);
     db.addEmployee(genId('emp'), store_id, name.trim(), username.trim().toLowerCase(), hashed, Number(salary) || 0, Number(debt) || 0, schedule || '', last_request || 'لا يوجد');
     db.logActivity(req.session.adminUser, 'ADD_EMPLOYEE', `إضافة موظف: ${name}`);
@@ -188,7 +192,7 @@ app.put('/admin/edit-employee/:id', requireAdmin, (req, res) => {
     if (req.session.adminUser !== 'mo') return res.status(403).json({ error: 'غير مصرح' });
     const { name, salary, debt, schedule, last_request } = req.body;
     if (!db.findEmployeeById(req.params.id)) return res.status(404).json({ error: 'الموظف غير موجود' });
-    
+
     db.updateEmployee(req.params.id, name, Number(salary), Number(debt), schedule, last_request);
     db.logActivity(req.session.adminUser, 'EDIT_EMPLOYEE', `تعديل موظف: ${req.params.id}`);
     res.json({ ok: true });
@@ -205,7 +209,7 @@ app.delete('/admin/delete-employee/:id', requireAdmin, (req, res) => {
 app.get('/api/store/employees', requireStore, (req, res) => {
     const store = db.findStoreById(req.session.storeUser);
     if (!store) return res.status(404).json({ error: 'المحل غير موجود' });
-    
+
     const employees = db.getEmployeesByStore(store.id).map(({ password, username, ...e }) => e);
     res.json({ storeName: store.name, employees });
 });
@@ -214,7 +218,7 @@ app.get('/api/store/employees', requireStore, (req, res) => {
 app.get('/api/employee/my-data', requireEmployee, (req, res) => {
     const emp = db.findEmployeeById(req.session.empUser);
     if (!emp) return res.status(404).json({ error: 'الموظف غير موجود' });
-    
+
     const store = db.findStoreById(emp.store_id);
     const { password, ...safeEmp } = emp;
     res.json({ ...safeEmp, storeName: store ? store.name : 'غير معروف' });

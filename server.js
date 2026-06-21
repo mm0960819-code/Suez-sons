@@ -232,10 +232,10 @@ app.get('/logout', (req, res) => {
 });
 
 // ===== Static files =====
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // ===== 404 =====
-app.use((req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use((req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
 // ===== Start =====
 const PORT = process.env.PORT || 3000;

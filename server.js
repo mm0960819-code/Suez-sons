@@ -235,7 +235,7 @@ app.get('/logout', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ===== 404 =====
-app.use((req, res) => res.status(404).redirect('/'));
+app.use((req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // ===== Start =====
 const PORT = process.env.PORT || 3000;

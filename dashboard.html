@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suez Sons | الداشبورد</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-animated"></div>
+    <nav class="dash-nav">
+        <div class="logo-text">☀️ Suez Sons</div>
+        <div class="nav-actions">
+            <a href="/" class="nav-item">🏠 الرئيسية</a>
+            <button onclick="printSuppliers()" class="nav-item" style="background:none;border:none;cursor:pointer;" title="طباعة">🖨️</button>
+            <a href="/change-password.html" class="nav-item" title="تغيير كلمة المرور">🔐</a>
+            <a href="/logout" class="logout-btn">خروج ↩</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="glass-card" style="padding:22px 26px; display:flex; align-items:center; gap:14px;">
+            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,rgba(245,158,11,0.3),rgba(245,158,11,0.1));border:2px solid rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-size:1.4rem;animation:pulse-glow 3s ease infinite;flex-shrink:0;">👤</div>
+            <div>
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:3px;">أهلاً، <span id="user-name">...</span> 👋</h2>
+                <span class="badge badge-success">✅ الحساب نشط</span>
+            </div>
+        </div>
+
+        <!-- Admin link -->
+        <a href="/admin.html" id="adminBtn" class="glass-card" style="display:none; padding:18px 22px; text-decoration:none; border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.05);">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:42px;height:42px;border-radius:12px;background:rgba(245,158,11,0.14);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">⚙️</div>
+                    <div>
+                        <div style="font-weight:700;color:var(--primary);">لوحة الإدارة</div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);">إدارة المحلات والموظفين</div>
+                    </div>
+                </div>
+                <span style="color:var(--primary);font-size:1.1rem;">←</span>
+            </div>
+        </a>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">💰 إجمالي المشتريات</div><div class="stat-value" id="total-buy">0</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div></div>
+            <div class="stat-card"><div class="stat-label">✅ المدفوع</div><div class="stat-value success" id="total-paid">0</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div></div>
+            <div class="stat-card"><div class="stat-label">🔴 المتبقي</div><div class="stat-value danger" id="total-rem">0</div><div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div></div>
+        </div>
+
+        <div>
+            <div class="section-header" style="margin-bottom:12px;">
+                <span class="section-title">📋 سجل الموردين</span>
+                <span id="count-badge" class="badge badge-warning" style="display:none;"></span>
+            </div>
+            <div class="table-wrapper">
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>#</th><th>المحل</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>التاريخ</th></tr></thead>
+                        <tbody id="table-body"><tr><td colspan="6"><div class="loading"><div class="spinner"></div><span>جاري التحميل...</span></div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function load() {
+            const res = await fetch('/api/my-purchases');
+            if (!res.ok) { window.location.href = '/login.html?type=admin'; return; }
+            const data = await res.json();
+            document.getElementById('user-name').textContent = data.username;
+            if (data.username === 'mo') document.getElementById('adminBtn').style.display = 'block';
+
+            const ps = data.purchases;
+            const cb = document.getElementById('count-badge');
+            if (ps.length) { cb.style.display = 'inline-flex'; cb.textContent = ps.length + ' عملية'; }
+
+            let tb = 0, tp = 0, tr = 0;
+            const tbody = document.getElementById('table-body');
+            if (!ps.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div><p>لا توجد بيانات بعد</p></div></td></tr>`; return; }
+            tbody.innerHTML = ps.map((p,i) => {
+                tb += p.total; tp += (p.paid || p.total - p.remaining); tr += p.remaining;
+                return `<tr>
+                    <td style="color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
+                    <td style="font-weight:700;">${p.shop}</td>
+                    <td>${p.total.toLocaleString('ar-EG')} ج.م</td>
+                    <td style="color:var(--success);font-weight:700;">${(p.paid||p.total-p.remaining).toLocaleString('ar-EG')} ج.م</td>
+                    <td style="color:${p.remaining>0?'var(--danger)':'var(--success)'};font-weight:700;">${p.remaining>0?'🔴':'✅'} ${p.remaining.toLocaleString('ar-EG')} ج.م</td>
+                    <td style="color:var(--text-muted);font-size:0.83rem;">${p.date}</td>
+                </tr>`;
+            }).join('');
+            document.getElementById('total-buy').textContent = tb.toLocaleString('ar-EG');
+            document.getElementById('total-paid').textContent = tp.toLocaleString('ar-EG');
+            document.getElementById('total-rem').textContent = tr.toLocaleString('ar-EG');
+        }
+
+        function printSuppliers() {
+            const table = document.querySelector('.table-wrapper table');
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html dir="rtl"><head><title>طباعة سجل الموردين</title><style>
+                    body { font-family:Cairo,Arial; direction:rtl; padding:20px; }
+                    h2 { text-align:center; margin-bottom:20px; }
+                    table { width:100%; border-collapse:collapse; }
+                    th, td { border:1px solid #999; padding:10px; text-align:right; }
+                    th { background:#f5a90b; color:white; font-weight:bold; }
+                    tr:nth-child(even) { background:#f9f9f9; }
+                </style></head><body>
+                <h2>📋 سجل الموردين</h2>
+                <table>${table.innerHTML}</table>
+                <p style="margin-top:30px;color:#999;font-size:12px;">طُبع من نظام Suez Sons - ${new Date().toLocaleString('ar-EG')}</p>
+                </body></html>
+            `);
+            printWin.print();
+        }
+
+        load();
+    </script>
+</body>
+</html>

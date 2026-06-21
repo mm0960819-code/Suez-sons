@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suez Sons | بياناتي</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-animated"></div>
+    <nav class="dash-nav">
+        <div class="logo-text">☀️ Suez Sons</div>
+        <div class="nav-actions">
+            <a href="/change-password.html" class="nav-item" title="تغيير كلمة المرور">🔐</a>
+            <a href="/logout" class="logout-btn">خروج ↩</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- Debt Warning -->
+        <div id="debtAlert" class="alert" style="display:none; background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); margin-bottom:16px;">
+            <span>⚠️ لديك دين متبقي — يرجى التواصل مع إدارة المحل</span>
+        </div>
+
+        <!-- Welcome -->
+        <div class="glass-card" style="padding:24px 26px; display:flex; align-items:center; gap:14px;">
+            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,rgba(16,185,129,0.3),rgba(16,185,129,0.1));border:2px solid rgba(16,185,129,0.4);display:flex;align-items:center;justify-content:center;font-size:1.4rem;animation:pulse-glow 3s ease infinite;flex-shrink:0;">👤</div>
+            <div>
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:3px;">أهلاً، <span id="emp-name">...</span></h2>
+                <span class="badge badge-success">✅ موظف نشط</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">💰 الراتب</div>
+                <div class="stat-value success" id="salary">0</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م / شهر</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🔴 الدين</div>
+                <div class="stat-value danger" id="debt">0</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div>
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div class="glass-card" style="padding:24px 26px;">
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:18px;color:var(--text-muted);">📋 بياناتي</h3>
+            <div>
+                <div class="detail-row">
+                    <span class="detail-label">🏪 المحل</span>
+                    <span class="detail-value" id="store-name">...</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🕐 مواعيد العمل</span>
+                    <span class="detail-value" id="schedule">...</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">📝 آخر طلب</span>
+                    <span class="detail-value" id="last-request">...</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">💰 الراتب الشهري</span>
+                    <span class="detail-value success" id="salary-detail">...</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🔴 الدين الحالي</span>
+                    <span class="detail-value" id="debt-detail">...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function load() {
+            const res = await fetch('/api/employee/my-data');
+            if (!res.ok) { window.location.href = '/login.html?type=employee'; return; }
+            const d = await res.json();
+
+            document.getElementById('emp-name').textContent = d.name;
+            document.getElementById('salary').textContent = d.salary.toLocaleString('ar-EG');
+            document.getElementById('debt').textContent = d.debt.toLocaleString('ar-EG');
+            document.getElementById('store-name').textContent = d.storeName;
+            document.getElementById('schedule').textContent = d.schedule;
+            document.getElementById('last-request').textContent = d.last_request;
+            document.getElementById('salary-detail').textContent = d.salary.toLocaleString('ar-EG') + ' ج.م';
+
+            const debtEl = document.getElementById('debt-detail');
+            if (d.debt > 0) {
+                debtEl.textContent = d.debt.toLocaleString('ar-EG') + ' ج.م';
+                debtEl.className = 'detail-value danger';
+                document.getElementById('debtAlert').style.display = 'flex';
+            } else {
+                debtEl.textContent = 'لا يوجد دين ✅';
+                debtEl.className = 'detail-value success';
+            }
+        }
+        load();
+    </script>
+</body>
+</html>

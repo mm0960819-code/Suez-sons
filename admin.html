@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suez Sons | الأدمن</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .tab-bar { display:flex; gap:8px; flex-wrap:wrap; }
+        .tab-btn {
+            padding:9px 20px; border-radius:var(--radius-sm); border:1px solid var(--border);
+            background:var(--bg-card); color:var(--text-muted); cursor:pointer;
+            font-family:'Cairo',sans-serif; font-size:0.88rem; font-weight:600;
+            transition:var(--transition);
+        }
+        .tab-btn.active { background:rgba(245,158,11,0.15); color:var(--primary); border-color:var(--border-gold); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .calc-preview {
+            background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.22);
+            border-radius:var(--radius-sm); padding:14px 18px;
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        @media (max-width:500px) { .form-row { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <div class="bg-animated"></div>
+    <nav class="dash-nav">
+        <div class="logo-text">☀️ Suez Sons</div>
+        <div class="nav-actions">
+            <a href="/dashboard.html" class="nav-item">📊 الداشبورد</a>
+            <a href="/change-password.html" class="nav-item" title="تغيير كلمة المرور">🔐</a>
+            <a href="/logout" class="logout-btn">خروج ↩</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div>
+            <h1 style="font-size:1.4rem;font-weight:900;margin-bottom:4px;">⚙️ لوحة الإدارة</h1>
+            <p style="color:var(--text-muted);font-size:0.87rem;">إدارة كاملة للمحلات والموظفين والموردين</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('suppliers')">📦 موردين</button>
+            <button class="tab-btn" onclick="switchTab('stores')">🏪 محلات</button>
+            <button class="tab-btn" onclick="switchTab('employees')">👥 موظفين</button>
+        </div>
+
+        <!-- TAB: Suppliers -->
+        <div id="tab-suppliers" class="tab-content active">
+            <div class="glass-card" style="padding:28px;">
+                <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;">➕ إضافة مورد جديد</h3>
+                <form id="supplierForm">
+                    <div class="form-group">
+                        <label class="form-label">👤 اسم المستخدم</label>
+                        <input type="text" name="username" class="form-input" placeholder="مثلاً: mo" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🏪 اسم المحل / المورد</label>
+                        <input type="text" name="shop" class="form-input" placeholder="مثلاً: صيدلية الشفاء" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">💰 الإجمالي</label>
+                            <input type="number" name="total" id="sup-total" class="form-input" placeholder="0" min="0" oninput="calcRem()" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">✅ المدفوع</label>
+                            <input type="number" name="paid" id="sup-paid" class="form-input" placeholder="0" min="0" oninput="calcRem()" required>
+                        </div>
+                    </div>
+                    <input type="hidden" name="remaining" id="sup-remaining" value="0">
+                    <div class="calc-preview" style="margin-bottom:18px;">
+                        <span style="font-size:0.83rem;color:var(--text-muted);">🔴 المتبقي تلقائياً:</span>
+                        <span style="font-size:1.2rem;font-weight:900;color:#6ee7b7;" id="rem-display">0 ج.م</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📅 التاريخ</label>
+                        <input type="date" name="date" id="sup-date" class="form-input" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">💾 حفظ المورد</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB: Stores -->
+        <div id="tab-stores" class="tab-content">
+            <div class="glass-card" style="padding:28px;">
+                <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;">➕ إضافة محل جديد</h3>
+                <form id="storeForm">
+                    <div class="form-group">
+                        <label class="form-label">🏪 اسم المحل</label>
+                        <input type="text" name="name" class="form-input" placeholder="مثلاً: سوبر ماركت النيل" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">👤 اسم المستخدم</label>
+                            <input type="text" name="username" class="form-input" placeholder="nile_market" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🔑 كلمة المرور</label>
+                            <input type="text" name="password" class="form-input" placeholder="كلمة المرور" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">💾 إضافة المحل</button>
+                </form>
+            </div>
+
+            <!-- Stores list -->
+            <div style="margin-top:16px;">
+                <div class="section-header" style="margin-bottom:10px;">
+                    <span class="section-title">🏪 المحلات الحالية</span>
+                </div>
+                <div class="table-wrapper">
+                    <div class="table-scroll">
+                        <table>
+                            <thead><tr><th>#</th><th>اسم المحل</th><th>المستخدم</th><th>الإجراء</th></tr></thead>
+                            <tbody id="stores-table"><tr><td colspan="4"><div class="loading"><div class="spinner"></div><span>جاري التحميل...</span></div></td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Employees -->
+        <div id="tab-employees" class="tab-content">
+            <div class="glass-card" style="padding:28px;">
+                <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;">➕ إضافة موظف جديد</h3>
+                <form id="employeeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">👤 اسم الموظف</label>
+                            <input type="text" name="name" class="form-input" placeholder="الاسم الكامل" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🏪 ID المحل</label>
+                            <input type="text" name="store_id" class="form-input" placeholder="store_001" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">🔑 اسم المستخدم</label>
+                            <input type="text" name="username" class="form-input" placeholder="ahmed_nile" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🔒 كلمة المرور</label>
+                            <input type="text" name="password" class="form-input" placeholder="كلمة المرور" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">💰 الراتب</label>
+                            <input type="number" name="salary" class="form-input" placeholder="4500" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">🔴 الدين</label>
+                            <input type="number" name="debt" class="form-input" placeholder="0" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🕐 مواعيد العمل</label>
+                        <input type="text" name="schedule" class="form-input" placeholder="السبت - الخميس | 9ص - 5م">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📝 آخر طلب</label>
+                        <input type="text" name="last_request" class="form-input" placeholder="لا يوجد">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">💾 إضافة الموظف</button>
+                </form>
+            </div>
+
+            <!-- Employees list -->
+            <div style="margin-top:16px;">
+                <div class="section-header" style="margin-bottom:10px;">
+                    <span class="section-title">👥 الموظفون الحاليون</span>
+                </div>
+                <div class="table-wrapper">
+                    <div class="table-scroll">
+                        <table>
+                            <thead><tr><th>#</th><th>الاسم</th><th>المحل</th><th>الراتب</th><th>الدين</th><th>الإجراء</th></tr></thead>
+                            <tbody id="emp-table"><tr><td colspan="6"><div class="loading"><div class="spinner"></div><span>جاري التحميل...</span></div></td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tabs
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+            if (name === 'stores') loadStores();
+            if (name === 'employees') loadEmployees();
+        }
+
+        // Suppliers
+        document.getElementById('sup-date').valueAsDate = new Date();
+        function calcRem() {
+            const t = parseFloat(document.getElementById('sup-total').value) || 0;
+            const p = parseFloat(document.getElementById('sup-paid').value) || 0;
+            const r = Math.max(0, t - p);
+            document.getElementById('sup-remaining').value = r;
+            document.getElementById('rem-display').textContent = r.toLocaleString('ar-EG') + ' ج.م';
+        }
+        document.getElementById('supplierForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const res = await fetch('/admin/add-purchase', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(fd)) });
+            if (res.ok) { alert('✅ تم الحفظ!'); e.target.reset(); calcRem(); document.getElementById('sup-date').valueAsDate = new Date(); }
+            else alert('❌ خطأ في الحفظ');
+        };
+
+        // Stores
+        async function loadStores() {
+            const res = await fetch('/admin/stores');
+            const stores = await res.json();
+            const tb = document.getElementById('stores-table');
+            if (!stores.length) { tb.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">🏪</div><p>لا توجد محلات</p></div></td></tr>`; return; }
+            tb.innerHTML = stores.map((s,i) => `
+                <tr>
+                    <td style="color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
+                    <td style="font-weight:700;">${s.name}</td>
+                    <td style="color:var(--text-muted);">${s.username}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteStore('${s.id}')">🗑 حذف</button></td>
+                </tr>`).join('');
+        }
+        document.getElementById('storeForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const res = await fetch('/admin/add-store', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(fd)) });
+            if (res.ok) { alert('✅ تم إضافة المحل!'); e.target.reset(); loadStores(); }
+            else alert('❌ خطأ');
+        };
+        async function deleteStore(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا المحل؟')) return;
+            const res = await fetch('/admin/delete-store/' + id, { method:'DELETE' });
+            if (res.ok) loadStores(); else alert('❌ خطأ في الحذف');
+        }
+
+        // Employees
+        async function loadEmployees() {
+            const [eRes, sRes] = await Promise.all([fetch('/admin/employees'), fetch('/admin/stores')]);
+            const emps = await eRes.json();
+            const stores = await sRes.json();
+            const storeMap = Object.fromEntries(stores.map(s => [s.id, s.name]));
+            const tb = document.getElementById('emp-table');
+            if (!emps.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">👥</div><p>لا يوجد موظفون</p></div></td></tr>`; return; }
+            tb.innerHTML = emps.map((e,i) => `
+                <tr>
+                    <td style="color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
+                    <td style="font-weight:700;">${e.name}</td>
+                    <td style="color:var(--text-muted);font-size:0.82rem;">${storeMap[e.store_id] || e.store_id}</td>
+                    <td class="paid-text">${e.salary.toLocaleString('ar-EG')} ج.م</td>
+                    <td class="${e.debt > 0 ? 'debt-text' : 'paid-text'}">${e.debt > 0 ? '🔴 ' + e.debt.toLocaleString('ar-EG') : '✅ 0'} ج.م</td>
+                    <td style="display:flex; gap:6px; justify-content:center;">
+                        <button class="btn btn-info btn-sm" onclick="editEmp('${e.id}', '${e.name}', ${e.salary}, ${e.debt}, '${e.schedule}', '${e.last_request}')">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteEmp('${e.id}')">🗑</button>
+                    </td>
+                </tr>`).join('');
+        }
+        document.getElementById('employeeForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const res = await fetch('/admin/add-employee', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(fd)) });
+            if (res.ok) { alert('✅ تم إضافة الموظف!'); e.target.reset(); loadEmployees(); }
+            else { const err = await res.json(); alert('❌ ' + (err.error || 'خطأ')); }
+        };
+        async function deleteEmp(id) {
+            if (!confirm('حذف هذا الموظف؟')) return;
+            const res = await fetch('/admin/delete-employee/' + id, { method:'DELETE' });
+            if (res.ok) loadEmployees(); else alert('❌ خطأ');
+        }
+
+        // Edit Employee
+        let editingId = null;
+        function editEmp(id, name, salary, debt, schedule, lastReq) {
+            editingId = id;
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;';
+            modal.innerHTML = `
+                <div class="glass-card" style="width:90%;max-width:450px;padding:28px;backdrop-filter:var(--blur);">
+                    <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:18px;color:var(--text-primary);">✏️ تعديل بيانات الموظف</h3>
+                    <form id="editForm">
+                        <div class="form-group">
+                            <label class="form-label">الاسم</label>
+                            <input type="text" id="editName" class="form-input" value="${name}" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">الراتب</label>
+                                <input type="number" id="editSalary" class="form-input" value="${salary}" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">الدين</label>
+                                <input type="number" id="editDebt" class="form-input" value="${debt}" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">المواعيد</label>
+                            <input type="text" id="editSchedule" class="form-input" value="${schedule}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">آخر طلب</label>
+                            <input type="text" id="editLastReq" class="form-input" value="${lastReq}">
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:20px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1;">💾 حفظ</button>
+                            <button type="button" class="btn btn-danger" onclick="this.closest('div').parentElement.remove();" style="flex:1;">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('editForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const res = await fetch('/admin/edit-employee/' + id, {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        name: document.getElementById('editName').value,
+                        salary: document.getElementById('editSalary').value,
+                        debt: document.getElementById('editDebt').value,
+                        schedule: document.getElementById('editSchedule').value,
+                        last_request: document.getElementById('editLastReq').value
+                    })
+                });
+                if (res.ok) { alert('✅ تم التحديث!'); modal.remove(); loadEmployees(); } else alert('❌ خطأ');
+            };
+        }
+
+        // Print
+        function printData(section) {
+            const table = section === 'emp' ? document.getElementById('emp-table') : null;
+            if (!table) return;
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html dir="rtl"><head><title>طباعة</title><style>
+                    body { font-family:Arial; direction:rtl; }
+                    table { width:100%; border-collapse:collapse; margin:20px 0; }
+                    th, td { border:1px solid #ddd; padding:8px; text-align:right; }
+                    th { background:#f0f0f0; }
+                </style></head><body>
+                <h2>قائمة الموظفين</h2>
+                <table>${table.innerHTML}</table>
+                </body></html>
+            `);
+            printWin.print();
+        }
+
+        // Styles for table
+        document.head.insertAdjacentHTML('beforeend', `<style>.debt-text{color:var(--danger);font-weight:700;}.paid-text{color:var(--success);font-weight:700;}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}</style>`);
+    </script>
+</body>
+</html>

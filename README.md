@@ -1,58 +1,34 @@
-# ☀️ Suez Sons
+base64-js
+=========
 
-نظام إدارة الموظفين والموردين مع قاعدة بيانات SQLite
+`base64-js` does basic base64 encoding/decoding in pure JS.
 
-## ✨ الميزات
+[![build status](https://secure.travis-ci.org/beatgammit/base64-js.png)](http://travis-ci.org/beatgammit/base64-js)
 
-- 👑 نظام أدمن كامل
-- 🏪 إدارة المحلات والموظفين
-- 💼 تتبع الموردين والمشتريات
-- 📊 تقارير ويب وطباعة
-- 🔐 تغيير كلمات المرور
-- 📱 واجهة عربية احترافية
-- 📊 قاعدة بيانات SQLite
+Many browsers already have base64 encoding/decoding functionality, but it is for text data, not all-purpose binary data.
 
-## 🚀 التثبيت المحلي
+Sometimes encoding/decoding binary data in the browser is useful, and that is what this module does.
 
-```bash
-git clone https://github.com/mm0960819-code/Suez-sons.git
-cd Suez-sons
-npm install
-npm run migrate
-npm start
-```
+## install
 
-السيرفر سيبدأ على: `http://localhost:3000`
+With [npm](https://npmjs.org) do:
 
-## 👤 حسابات الاختبار
+`npm install base64-js` and `var base64js = require('base64-js')`
 
-| النوع | اليوزرنيم | الباسورد |
-|-------|-----------|---------|
-| أدمن | `mo` | `123` |
-| محل | `nile_market` | `123` |
-| محل | `elegance_store` | `123` |
-| موظف | `ahmed_nile` | `123` |
-| موظف | `mohamed_nile` | `123` |
-| موظف | `sara_elegance` | `123` |
+For use in web browsers do:
 
-## 📁 الملفات الرئيسية
+`<script src="base64js.min.js"></script>`
 
-- `server.js` - السيرفر الرئيسي
-- `db.js` - دوال قاعدة البيانات
-- `migrate.js` - إنشاء وتهيئة DB
-- `public/` - الملفات الثابتة (HTML, CSS)
+[Get supported base64-js with the Tidelift Subscription](https://tidelift.com/subscription/pkg/npm-base64-js?utm_source=npm-base64-js&utm_medium=referral&utm_campaign=readme)
 
-## 🔧 التكنولوجيا
+## methods
 
-- Node.js + Express
-- SQLite3
-- Bcrypt (تشفير كلمات المرور)
-- Express Session (إدارة الجلسات)
+`base64js` has three exposed functions, `byteLength`, `toByteArray` and `fromByteArray`, which both take a single argument.
 
-## 📝 الترخيص
+* `byteLength` - Takes a base64 string and returns length of byte array
+* `toByteArray` - Takes a base64 string and returns a byte array
+* `fromByteArray` - Takes a byte array and returns a base64 string
+
+## license
 
 MIT
-
----
-
-صُنع بـ ❤️ من قبل Suez Sons Team

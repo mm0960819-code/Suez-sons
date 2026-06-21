@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suez Sons | لوحة المحل</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .emp-card { display:flex; align-items:center; gap:16px; padding:18px 22px; cursor:default; }
+        .debt-pill {
+            font-size:0.78rem; font-weight:700; padding:4px 10px;
+            border-radius:50px; white-space:nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animated"></div>
+    <nav class="dash-nav">
+        <div class="logo-text">☀️ Suez Sons</div>
+        <div class="nav-actions">
+            <a href="/" class="nav-item">🏠 الرئيسية</a>
+            <button onclick="printEmployees()" class="nav-item" style="background:none;border:none;cursor:pointer;" title="طباعة">🖨️</button>
+            <a href="/change-password.html" class="nav-item" title="تغيير كلمة المرور">🔐</a>
+            <a href="/logout" class="logout-btn">خروج ↩</a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- Welcome -->
+        <div class="glass-card" style="padding:24px 26px; display:flex; align-items:center; gap:14px;">
+            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,rgba(59,130,246,0.3),rgba(59,130,246,0.1));border:2px solid rgba(59,130,246,0.4);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🏪</div>
+            <div>
+                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:3px;">أهلاً، <span id="store-name">...</span></h2>
+                <span class="badge badge-info">✅ حساب نشط</span>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">👥 عدد الموظفين</div>
+                <div class="stat-value" id="emp-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💰 إجمالي الرواتب</div>
+                <div class="stat-value" id="total-salary">0</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🔴 إجمالي الديون</div>
+                <div class="stat-value danger" id="total-debt">0</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div>
+            </div>
+        </div>
+
+        <!-- Employees List -->
+        <div>
+            <div class="section-header" style="margin-bottom:12px;">
+                <span class="section-title">👥 قائمة الموظفين</span>
+            </div>
+            <div class="table-wrapper" id="emp-list">
+                <div class="loading"><div class="spinner"></div><span>جاري التحميل...</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function load() {
+            const res = await fetch('/api/store/employees');
+            if (!res.ok) { window.location.href = '/login.html?type=store'; return; }
+            const data = await res.json();
+
+            document.getElementById('store-name').textContent = data.storeName;
+
+            const emps = data.employees;
+            document.getElementById('emp-count').textContent = emps.length;
+            document.getElementById('total-salary').textContent = emps.reduce((s,e) => s + e.salary, 0).toLocaleString('ar-EG');
+            document.getElementById('total-debt').textContent = emps.reduce((s,e) => s + e.debt, 0).toLocaleString('ar-EG');
+
+            const container = document.getElementById('emp-list');
+            if (!emps.length) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>لا يوجد موظفون بعد</p></div>`;
+                return;
+            }
+
+            container.innerHTML = emps.map(e => `
+                <div class="emp-card glass-card" style="margin:0;border-radius:0;border:none;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div class="emp-avatar">👤</div>
+                    <div class="emp-info">
+                        <div class="emp-name">${e.name}</div>
+                        <div class="emp-meta">
+                            <span>💰 ${e.salary.toLocaleString('ar-EG')} ج.م</span>
+                            <span>🕐 ${e.schedule}</span>
+                            <span>📝 ${e.last_request}</span>
+                        </div>
+                    </div>
+                    <div>
+                        ${e.debt > 0
+                            ? `<span class="badge badge-danger">🔴 دين: ${e.debt.toLocaleString('ar-EG')} ج.م</span>`
+                            : `<span class="badge badge-success">✅ بدون دين</span>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function printEmployees() {
+            const table = document.querySelector('.table-wrapper table');
+            const storeName = document.getElementById('store-name').textContent;
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html dir="rtl"><head><title>طباعة الموظفين</title><style>
+                    body { font-family:Cairo,Arial; direction:rtl; padding:20px; }
+                    h2 { text-align:center; margin-bottom:10px; }
+                    p { text-align:center; color:#666; margin-bottom:20px; }
+                    table { width:100%; border-collapse:collapse; }
+                    th, td { border:1px solid #999; padding:10px; text-align:right; }
+                    th { background:#3b82f6; color:white; font-weight:bold; }
+                    tr:nth-child(even) { background:#f9f9f9; }
+                </style></head><body>
+                <h2>👥 قائمة الموظفين</h2>
+                <p><strong>${storeName}</strong></p>
+                <table>${table.innerHTML}</table>
+                <p style="margin-top:30px;color:#999;font-size:12px;">طُبع من نظام Suez Sons - ${new Date().toLocaleString('ar-EG')}</p>
+                </body></html>
+            `);
+            printWin.print();
+        }
+
+        load();
+    </script>
+</body>
+</html>

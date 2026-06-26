@@ -214,6 +214,21 @@ app.get('/api/store/employees', requireStore, (req, res) => {
     res.json({ storeName: store.name, employees });
 });
 
+// ===== API: Store Owner — Update Employee Debt =====
+app.put('/api/store/update-employee/:id', requireStore, (req, res) => {
+    const { debt, last_request } = req.body;
+
+    // تأكد إن الموظف تابع للمحل الحالي
+    const emp = db.findEmployeeById(req.params.id);
+    if (!emp) return res.status(404).json({ error: 'الموظف غير موجود' });
+    if (emp.store_id !== req.session.storeUser) return res.status(403).json({ error: 'غير مصرح' });
+
+    // تعديل الدين وآخر طلب فقط — الراتب والبيانات الأساسية محمية
+    db.updateEmployee(req.params.id, emp.name, emp.salary, Number(debt) ?? emp.debt, emp.schedule, last_request || emp.last_request);
+    db.logActivity(req.session.storeUser, 'UPDATE_DEBT', `تعديل دين موظف: ${emp.name} → ${debt} ج.م`);
+    res.json({ ok: true });
+});
+
 // ===== API: Employee =====
 app.get('/api/employee/my-data', requireEmployee, (req, res) => {
     const emp = db.findEmployeeById(req.session.empUser);

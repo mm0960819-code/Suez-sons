@@ -3,224 +3,483 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suez Sons | لوحة المحل</title>
+    <title>Suez Sons | لوحة تحكم المحل</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .emp-card { display:flex; align-items:center; gap:16px; padding:18px 22px; cursor:default; }
-        .debt-pill {
-            font-size:0.78rem; font-weight:700; padding:4px 10px;
-            border-radius:50px; white-space:nowrap;
+        /* ── Store-specific overrides ── */
+        .store-hero {
+            background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(139,92,246,0.08) 100%);
+            border: 1px solid rgba(59,130,246,0.25);
+            border-radius: var(--radius);
+            padding: 28px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
         }
-        .print-invoice-btn {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 7px 14px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
+        .store-hero::before {
+            content: '';
+            position: absolute;
+            top: -40px; left: -40px;
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%);
+        }
+        .store-avatar {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(139,92,246,0.2));
+            border: 2px solid rgba(59,130,246,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; flex-shrink: 0;
+        }
+        .store-info h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+        .store-info p { font-size: 0.83rem; color: var(--text-muted); }
+
+        /* Search & filter bar */
+        .toolbar {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1; min-width: 180px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .search-input:focus { border-color: var(--border-gold); box-shadow: 0 0 0 3px rgba(245,158,11,0.09); }
+        .search-input::placeholder { color: rgba(148,163,184,0.45); }
+        .filter-btn {
+            padding: 10px 16px; border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            color: var(--text-muted); font-family: 'Cairo', sans-serif;
+            font-size: 0.83rem; cursor: pointer; transition: var(--transition);
             white-space: nowrap;
-            font-family: inherit;
-            transition: opacity 0.2s;
         }
-        .print-invoice-btn:hover { opacity: 0.85; }
+        .filter-btn.active, .filter-btn:hover {
+            background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.35);
+            color: var(--primary);
+        }
+
+        /* Employee cards */
+        .emp-grid { display: flex; flex-direction: column; gap: 0; }
+        .emp-row {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: var(--transition);
+            cursor: default;
+        }
+        .emp-row:last-child { border-bottom: none; }
+        .emp-row:hover { background: rgba(255,255,255,0.03); }
+        .emp-avatar-sm {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05));
+            border: 1.5px solid rgba(245,158,11,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+        .emp-details { flex: 1; min-width: 0; }
+        .emp-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .emp-meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .emp-tag {
+            font-size: 0.75rem; color: var(--text-muted);
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 6px; padding: 2px 8px;
+        }
+        .emp-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+
+        /* Debt badge */
+        .debt-badge {
+            font-size: 0.75rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 50px; white-space: nowrap;
+        }
+        .debt-badge.has-debt { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); }
+        .debt-badge.no-debt { background: rgba(16,185,129,0.1); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+
+        /* Action buttons */
+        .action-btn {
+            padding: 6px 12px; border-radius: 8px; border: none;
+            font-family: 'Cairo', sans-serif; font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition); white-space: nowrap;
+        }
+        .btn-invoice { background: rgba(59,130,246,0.14); color: #93c5fd; border: 1px solid rgba(59,130,246,0.28); }
+        .btn-invoice:hover { background: rgba(59,130,246,0.25); }
+        .btn-edit-debt { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.28); }
+        .btn-edit-debt:hover { background: rgba(245,158,11,0.22); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: #0f172a; border: 1px solid rgba(255,255,255,0.12);
+            border-radius: var(--radius); padding: 28px;
+            max-width: 420px; width: 100%;
+            transform: translateY(20px); transition: transform 0.25s;
+        }
+        .modal-overlay.show .modal-box { transform: translateY(0); }
+        .modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* Section header */
+        .section-hdr {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+        }
+        .section-title-lg { font-size: 1rem; font-weight: 800; }
+        .emp-count-pill {
+            background: rgba(245,158,11,0.1); color: var(--primary);
+            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 50px; padding: 3px 12px; font-size: 0.78rem; font-weight: 700;
+        }
+
+        /* Empty state */
+        .empty-state { padding: 50px 20px; text-align: center; color: var(--text-muted); }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* Loading */
+        .loading-state { padding: 40px; text-align: center; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .spinner { width: 20px; height: 20px; border: 2px solid rgba(245,158,11,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .emp-row { flex-wrap: wrap; }
+            .emp-actions { width: 100%; justify-content: flex-end; }
+        }
     </style>
 </head>
 <body>
     <div class="bg-animated"></div>
+
+    <!-- Navbar -->
     <nav class="dash-nav">
         <div class="logo-text">☀️ Suez Sons</div>
         <div class="nav-actions">
-            <a href="/" class="nav-item">🏠 الرئيسية</a>
-            <button onclick="printEmployees()" class="nav-item" style="background:none;border:none;cursor:pointer;" title="طباعة">🖨️</button>
+            <a href="/" class="nav-item">🏠</a>
+            <button onclick="printAll()" class="nav-item" style="background:none;border:none;cursor:pointer;" title="طباعة الكل">🖨️</button>
             <a href="/change-password.html" class="nav-item" title="تغيير كلمة المرور">🔐</a>
             <a href="/logout" class="logout-btn">خروج ↩</a>
         </div>
     </nav>
 
     <div class="main-content">
-        <!-- Welcome -->
-        <div class="glass-card" style="padding:24px 26px; display:flex; align-items:center; gap:14px;">
-            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,rgba(59,130,246,0.3),rgba(59,130,246,0.1));border:2px solid rgba(59,130,246,0.4);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🏪</div>
-            <div>
-                <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:3px;">أهلاً، <span id="store-name">...</span></h2>
-                <span class="badge badge-info">✅ حساب نشط</span>
+
+        <!-- Hero -->
+        <div class="store-hero">
+            <div class="store-avatar">🏪</div>
+            <div class="store-info">
+                <h2>أهلاً، <span id="store-name">...</span></h2>
+                <p>لوحة تحكم صاحب المحل · <span id="today-date"></span></p>
             </div>
+            <span class="badge badge-info" style="margin-right:auto;flex-shrink:0;">✅ نشط</span>
         </div>
 
         <!-- Stats -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">👥 عدد الموظفين</div>
-                <div class="stat-value" id="emp-count">0</div>
+                <div class="stat-label">👥 الموظفون</div>
+                <div class="stat-value" id="stat-count">—</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">💰 إجمالي الرواتب</div>
-                <div class="stat-value" id="total-salary">0</div>
-                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div>
+                <div class="stat-value" id="stat-salary">—</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">ج.م / شهر</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">🔴 إجمالي الديون</div>
-                <div class="stat-value danger" id="total-debt">0</div>
-                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">ج.م</div>
+                <div class="stat-value danger" id="stat-debt">—</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">ج.م</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💵 صافي المدفوعات</div>
+                <div class="stat-value success" id="stat-net">—</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">ج.م</div>
             </div>
         </div>
 
-        <!-- Employees List -->
+        <!-- Employees -->
         <div>
-            <div class="section-header" style="margin-bottom:12px;">
-                <span class="section-title">👥 قائمة الموظفين</span>
+            <div class="section-hdr">
+                <span class="section-title-lg">👥 قائمة الموظفين</span>
+                <span class="emp-count-pill" id="emp-count-pill">0 موظف</span>
             </div>
-            <div class="table-wrapper" id="emp-list">
-                <div class="loading"><div class="spinner"></div><span>جاري التحميل...</span></div>
+
+            <!-- Toolbar -->
+            <div class="toolbar" style="margin-bottom:12px;">
+                <input type="text" class="search-input" id="search-input" placeholder="🔍 ابحث باسم الموظف..." oninput="filterEmployees()">
+                <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">الكل</button>
+                <button class="filter-btn" id="filter-debt" onclick="setFilter('debt')">🔴 عليهم دين</button>
+                <button class="filter-btn" id="filter-clear" onclick="setFilter('clear')">✅ بدون دين</button>
+            </div>
+
+            <div class="table-wrapper">
+                <div class="emp-grid" id="emp-list">
+                    <div class="loading-state"><div class="spinner"></div><span>جاري التحميل...</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal: تعديل الدين -->
+    <div class="modal-overlay" id="debt-modal">
+        <div class="modal-box">
+            <div class="modal-title">✏️ تعديل دين الموظف</div>
+            <div style="margin-bottom:14px;">
+                <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px;" id="modal-emp-name">—</div>
+                <div style="font-size:0.83rem;color:var(--text-muted);">الراتب: <span id="modal-emp-salary">—</span> ج.م</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">قيمة الدين الجديدة (ج.م)</label>
+                <input type="number" class="form-input" id="modal-debt-input" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">آخر طلب / ملاحظة</label>
+                <input type="text" class="form-input" id="modal-request-input" placeholder="مثال: سلفة، إجازة...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" style="flex:1;" onclick="saveDebt()">💾 حفظ</button>
+                <button class="btn btn-danger btn-sm" onclick="closeModal()">إلغاء</button>
             </div>
         </div>
     </div>
 
     <script>
+        let allEmployees = [];
+        let currentFilter = 'all';
+        let editingEmp = null;
         let storeNameGlobal = '';
 
+        // Date
+        document.getElementById('today-date').textContent = new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
         async function load() {
-            const res = await fetch('/api/store/employees');
-            if (!res.ok) { window.location.href = '/login.html?type=store'; return; }
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/store/employees');
+                if (!res.ok) { window.location.href = '/login.html?type=store'; return; }
+                const data = await res.json();
 
-            storeNameGlobal = data.storeName;
-            document.getElementById('store-name').textContent = data.storeName;
+                storeNameGlobal = data.storeName;
+                document.getElementById('store-name').textContent = data.storeName;
+                allEmployees = data.employees;
+                updateStats();
+                renderEmployees();
+            } catch(e) {
+                document.getElementById('emp-list').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>حدث خطأ في تحميل البيانات</p></div>`;
+            }
+        }
 
-            const emps = data.employees;
-            document.getElementById('emp-count').textContent = emps.length;
-            document.getElementById('total-salary').textContent = emps.reduce((s,e) => s + e.salary, 0).toLocaleString('ar-EG');
-            document.getElementById('total-debt').textContent = emps.reduce((s,e) => s + e.debt, 0).toLocaleString('ar-EG');
+        function updateStats() {
+            const total = allEmployees.length;
+            const totalSalary = allEmployees.reduce((s,e) => s + e.salary, 0);
+            const totalDebt = allEmployees.reduce((s,e) => s + e.debt, 0);
+            const net = totalSalary - totalDebt;
 
+            document.getElementById('stat-count').textContent = total;
+            document.getElementById('stat-salary').textContent = totalSalary.toLocaleString('ar-EG');
+            document.getElementById('stat-debt').textContent = totalDebt.toLocaleString('ar-EG');
+            document.getElementById('stat-net').textContent = net.toLocaleString('ar-EG');
+        }
+
+        function setFilter(f) {
+            currentFilter = f;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('filter-' + f).classList.add('active');
+            renderEmployees();
+        }
+
+        function filterEmployees() { renderEmployees(); }
+
+        function getFiltered() {
+            const q = document.getElementById('search-input').value.trim().toLowerCase();
+            return allEmployees.filter(e => {
+                const matchSearch = !q || e.name.toLowerCase().includes(q);
+                const matchFilter = currentFilter === 'all' || (currentFilter === 'debt' ? e.debt > 0 : e.debt === 0);
+                return matchSearch && matchFilter;
+            });
+        }
+
+        function renderEmployees() {
+            const list = getFiltered();
             const container = document.getElementById('emp-list');
-            if (!emps.length) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>لا يوجد موظفون بعد</p></div>`;
+            document.getElementById('emp-count-pill').textContent = list.length + ' موظف';
+
+            if (!list.length) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>لا توجد نتائج</p></div>`;
                 return;
             }
 
-            container.innerHTML = emps.map(e => `
-                <div class="emp-card glass-card" style="margin:0;border-radius:0;border:none;border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <div class="emp-avatar">👤</div>
-                    <div class="emp-info" style="flex:1;">
+            container.innerHTML = list.map(e => `
+                <div class="emp-row">
+                    <div class="emp-avatar-sm">👤</div>
+                    <div class="emp-details">
                         <div class="emp-name">${e.name}</div>
-                        <div class="emp-meta">
-                            <span>💰 ${e.salary.toLocaleString('ar-EG')} ج.م</span>
-                            <span>🕐 ${e.schedule}</span>
-                            <span>📝 ${e.last_request}</span>
+                        <div class="emp-meta-row">
+                            <span class="emp-tag">💰 ${e.salary.toLocaleString('ar-EG')} ج.م</span>
+                            ${e.schedule ? `<span class="emp-tag">🕐 ${e.schedule}</span>` : ''}
+                            ${e.last_request && e.last_request !== 'لا يوجد' ? `<span class="emp-tag">📝 ${e.last_request}</span>` : ''}
                         </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-                        ${e.debt > 0
-                            ? `<span class="badge badge-danger">🔴 دين: ${e.debt.toLocaleString('ar-EG')} ج.م</span>`
-                            : `<span class="badge badge-success">✅ بدون دين</span>`
-                        }
-                        <button class="print-invoice-btn" onclick='printInvoice(${JSON.stringify(e)})'>🧾 فاتورة</button>
+                    <div class="emp-actions">
+                        <span class="debt-badge ${e.debt > 0 ? 'has-debt' : 'no-debt'}">
+                            ${e.debt > 0 ? '🔴 ' + e.debt.toLocaleString('ar-EG') + ' ج.م' : '✅ بدون دين'}
+                        </span>
+                        <button class="action-btn btn-edit-debt" onclick='openDebtModal(${JSON.stringify(e)})'>✏️ دين</button>
+                        <button class="action-btn btn-invoice" onclick='printInvoice(${JSON.stringify(e)})'>🧾 فاتورة</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function printInvoice(e) {
-            const netSalary = e.salary - e.debt;
-            const printWin = window.open('', '_blank');
-            printWin.document.write(`
-                <html dir="rtl"><head><title>فاتورة راتب - ${e.name}</title><style>
-                    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-                    * { box-sizing:border-box; margin:0; padding:0; }
-                    body { font-family:'Cairo',Arial,sans-serif; direction:rtl; padding:40px; background:#fff; color:#1a1a2e; }
-                    .invoice-box { max-width:600px; margin:auto; border:2px solid #3b82f6; border-radius:12px; overflow:hidden; }
-                    .invoice-header { background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:white; padding:24px 30px; text-align:center; }
-                    .invoice-header h1 { font-size:1.5rem; font-weight:700; margin-bottom:4px; }
-                    .invoice-header p { font-size:0.9rem; opacity:0.85; }
-                    .invoice-body { padding:28px 30px; }
-                    .info-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f0f0f0; font-size:0.95rem; }
-                    .info-row:last-child { border-bottom:none; }
-                    .info-label { color:#666; }
-                    .info-value { font-weight:700; color:#1a1a2e; }
-                    .total-row { background:#f0f7ff; border-radius:8px; padding:14px 16px; margin-top:18px; display:flex; justify-content:space-between; align-items:center; }
-                    .total-label { font-size:1rem; font-weight:700; color:#3b82f6; }
-                    .total-value { font-size:1.3rem; font-weight:700; color:#1d4ed8; }
-                    .invoice-footer { text-align:center; padding:16px; background:#fafafa; font-size:0.78rem; color:#999; border-top:1px solid #eee; }
-                    @media print { body { padding:0; } }
-                </style></head><body>
-                <div class="invoice-box">
-                    <div class="invoice-header">
-                        <h1>☀️ Suez Sons</h1>
-                        <p>فاتورة راتب شهري</p>
-                    </div>
-                    <div class="invoice-body">
-                        <div class="info-row">
-                            <span class="info-label">اسم الموظف</span>
-                            <span class="info-value">${e.name}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">المحل</span>
-                            <span class="info-value">${storeNameGlobal}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">جدول العمل</span>
-                            <span class="info-value">${e.schedule || '—'}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">الراتب الأساسي</span>
-                            <span class="info-value">${e.salary.toLocaleString('ar-EG')} ج.م</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">الخصومات / الديون</span>
-                            <span class="info-value" style="color:${e.debt > 0 ? '#ef4444' : '#22c55e'};">
-                                ${e.debt > 0 ? '- ' + e.debt.toLocaleString('ar-EG') + ' ج.م' : 'لا يوجد'}
-                            </span>
-                        </div>
-                        <div class="total-row">
-                            <span class="total-label">💰 صافي الراتب</span>
-                            <span class="total-value">${netSalary.toLocaleString('ar-EG')} ج.م</span>
-                        </div>
-                    </div>
-                    <div class="invoice-footer">
-                        طُبع من نظام Suez Sons — ${new Date().toLocaleString('ar-EG')}
-                    </div>
-                </div>
-                <script>window.onload = () => { window.print(); }<\/script>
-                </body></html>
-            `);
-            printWin.document.close();
+        // ── Debt Modal ──
+        function openDebtModal(emp) {
+            editingEmp = emp;
+            document.getElementById('modal-emp-name').textContent = emp.name;
+            document.getElementById('modal-emp-salary').textContent = emp.salary.toLocaleString('ar-EG');
+            document.getElementById('modal-debt-input').value = emp.debt;
+            document.getElementById('modal-request-input').value = emp.last_request || '';
+            document.getElementById('debt-modal').classList.add('show');
         }
 
-        function printEmployees() {
-            const storeName = document.getElementById('store-name').textContent;
-            const cards = document.querySelectorAll('#emp-list .emp-card');
-            let rows = '';
-            cards.forEach(card => {
-                const name = card.querySelector('.emp-name')?.textContent || '';
-                const metas = card.querySelectorAll('.emp-meta span');
-                const salary = metas[0]?.textContent || '';
-                const schedule = metas[1]?.textContent || '';
-                const badge = card.querySelector('.badge')?.textContent || '';
-                rows += `<tr><td>${name}</td><td>${salary}</td><td>${schedule}</td><td>${badge}</td></tr>`;
-            });
-            const printWin = window.open('', '_blank');
-            printWin.document.write(`
-                <html dir="rtl"><head><title>طباعة الموظفين</title><style>
-                    body { font-family:Cairo,Arial; direction:rtl; padding:20px; }
-                    h2 { text-align:center; margin-bottom:10px; }
-                    p { text-align:center; color:#666; margin-bottom:20px; }
-                    table { width:100%; border-collapse:collapse; }
-                    th, td { border:1px solid #999; padding:10px; text-align:right; }
-                    th { background:#3b82f6; color:white; font-weight:bold; }
-                    tr:nth-child(even) { background:#f9f9f9; }
+        function closeModal() {
+            document.getElementById('debt-modal').classList.remove('show');
+            editingEmp = null;
+        }
+
+        async function saveDebt() {
+            if (!editingEmp) return;
+            const newDebt = Number(document.getElementById('modal-debt-input').value) || 0;
+            const newReq = document.getElementById('modal-request-input').value.trim() || editingEmp.last_request;
+
+            try {
+                const res = await fetch(`/api/store/update-employee/${editingEmp.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ debt: newDebt, last_request: newReq })
+                });
+
+                if (res.ok) {
+                    // Update locally
+                    const idx = allEmployees.findIndex(e => e.id === editingEmp.id);
+                    if (idx !== -1) {
+                        allEmployees[idx].debt = newDebt;
+                        allEmployees[idx].last_request = newReq;
+                    }
+                    updateStats();
+                    renderEmployees();
+                    closeModal();
+                } else {
+                    alert('حدث خطأ أثناء الحفظ');
+                }
+            } catch(e) {
+                alert('تعذر الاتصال بالسيرفر');
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('debt-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ── Print Invoice ──
+        function printInvoice(e) {
+            const netSalary = e.salary - e.debt;
+            const w = window.open('', '_blank');
+            w.document.write(`
+                <!DOCTYPE html><html dir="rtl"><head>
+                <meta charset="UTF-8">
+                <title>فاتورة - ${e.name}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+                    * { box-sizing:border-box; margin:0; padding:0; }
+                    body { font-family:'Cairo',Arial,sans-serif; direction:rtl; padding:40px; background:#fff; color:#1a1a2e; }
+                    .box { max-width:560px; margin:auto; border:2px solid #3b82f6; border-radius:14px; overflow:hidden; }
+                    .hdr { background:linear-gradient(135deg,#1d4ed8,#7c3aed); color:#fff; padding:26px 30px; text-align:center; }
+                    .hdr h1 { font-size:1.5rem; font-weight:900; margin-bottom:4px; }
+                    .hdr p { font-size:0.85rem; opacity:0.8; }
+                    .body { padding:26px 30px; }
+                    .row { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid #f0f0f0; font-size:0.92rem; }
+                    .row:last-child { border:none; }
+                    .lbl { color:#666; }
+                    .val { font-weight:700; }
+                    .total { background:#eff6ff; border-radius:10px; padding:14px 18px; margin-top:16px; display:flex; justify-content:space-between; align-items:center; }
+                    .total-lbl { font-weight:800; color:#1d4ed8; font-size:1rem; }
+                    .total-val { font-weight:900; color:#1d4ed8; font-size:1.35rem; }
+                    .ftr { text-align:center; padding:14px; font-size:0.75rem; color:#aaa; background:#fafafa; border-top:1px solid #eee; }
                 </style></head><body>
-                <h2>👥 قائمة الموظفين</h2>
-                <p><strong>${storeName}</strong></p>
-                <table>
-                    <tr><th>الاسم</th><th>الراتب</th><th>الجدول</th><th>الديون</th></tr>
-                    ${rows}
-                </table>
-                <p style="margin-top:30px;color:#999;font-size:12px;">طُبع من نظام Suez Sons - ${new Date().toLocaleString('ar-EG')}</p>
+                <div class="box">
+                    <div class="hdr"><h1>☀️ Suez Sons</h1><p>فاتورة راتب شهري</p></div>
+                    <div class="body">
+                        <div class="row"><span class="lbl">الموظف</span><span class="val">${e.name}</span></div>
+                        <div class="row"><span class="lbl">المحل</span><span class="val">${storeNameGlobal}</span></div>
+                        ${e.schedule ? `<div class="row"><span class="lbl">جدول العمل</span><span class="val">${e.schedule}</span></div>` : ''}
+                        <div class="row"><span class="lbl">الراتب الأساسي</span><span class="val">${e.salary.toLocaleString('ar-EG')} ج.م</span></div>
+                        <div class="row"><span class="lbl">الديون / الخصومات</span><span class="val" style="color:${e.debt > 0 ? '#ef4444' : '#10b981'};">${e.debt > 0 ? '- ' + e.debt.toLocaleString('ar-EG') + ' ج.م' : 'لا يوجد'}</span></div>
+                        ${e.last_request && e.last_request !== 'لا يوجد' ? `<div class="row"><span class="lbl">آخر ملاحظة</span><span class="val">${e.last_request}</span></div>` : ''}
+                        <div class="total">
+                            <span class="total-lbl">💰 صافي الراتب</span>
+                            <span class="total-val">${netSalary.toLocaleString('ar-EG')} ج.م</span>
+                        </div>
+                    </div>
+                    <div class="ftr">طُبع من نظام Suez Sons · ${new Date().toLocaleString('ar-EG')}</div>
+                </div>
+                <script>window.onload=()=>{window.print();}<\/script>
                 </body></html>
             `);
-            printWin.print();
+            w.document.close();
+        }
+
+        // ── Print All ──
+        function printAll() {
+            const list = getFiltered();
+            const rows = list.map(e => `
+                <tr>
+                    <td>${e.name}</td>
+                    <td>${e.salary.toLocaleString('ar-EG')} ج.م</td>
+                    <td>${e.schedule || '—'}</td>
+                    <td style="color:${e.debt > 0 ? '#ef4444' : '#10b981'};">${e.debt > 0 ? e.debt.toLocaleString('ar-EG') + ' ج.م' : 'لا يوجد'}</td>
+                    <td>${(e.salary - e.debt).toLocaleString('ar-EG')} ج.م</td>
+                </tr>
+            `).join('');
+            const w = window.open('', '_blank');
+            w.document.write(`
+                <!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
+                <title>كشف الموظفين - ${storeNameGlobal}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+                    body { font-family:'Cairo',Arial; direction:rtl; padding:30px; color:#1a1a2e; }
+                    h2 { text-align:center; font-size:1.4rem; margin-bottom:4px; }
+                    p { text-align:center; color:#666; margin-bottom:20px; font-size:0.85rem; }
+                    table { width:100%; border-collapse:collapse; }
+                    th { background:#1d4ed8; color:#fff; padding:11px 12px; text-align:right; font-size:0.88rem; }
+                    td { border:1px solid #e5e7eb; padding:10px 12px; font-size:0.88rem; }
+                    tr:nth-child(even) td { background:#f9fafb; }
+                    .ftr { margin-top:24px; text-align:center; color:#aaa; font-size:0.75rem; }
+                </style></head><body>
+                <h2>☀️ Suez Sons — كشف الموظفين</h2>
+                <p>${storeNameGlobal} · ${new Date().toLocaleDateString('ar-EG')}</p>
+                <table>
+                    <tr><th>الاسم</th><th>الراتب</th><th>الجدول</th><th>الديون</th><th>الصافي</th></tr>
+                    ${rows}
+                </table>
+                <div class="ftr">طُبع من نظام Suez Sons · ${new Date().toLocaleString('ar-EG')}</div>
+                <script>window.onload=()=>{window.print();}<\/script>
+                </body></html>
+            `);
+            w.document.close();
         }
 
         load();

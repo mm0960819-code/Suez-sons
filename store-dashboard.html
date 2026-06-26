@@ -11,6 +11,20 @@
             font-size:0.78rem; font-weight:700; padding:4px 10px;
             border-radius:50px; white-space:nowrap;
         }
+        .print-invoice-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: inherit;
+            transition: opacity 0.2s;
+        }
+        .print-invoice-btn:hover { opacity: 0.85; }
     </style>
 </head>
 <body>
@@ -65,11 +79,14 @@
     </div>
 
     <script>
+        let storeNameGlobal = '';
+
         async function load() {
             const res = await fetch('/api/store/employees');
             if (!res.ok) { window.location.href = '/login.html?type=store'; return; }
             const data = await res.json();
 
+            storeNameGlobal = data.storeName;
             document.getElementById('store-name').textContent = data.storeName;
 
             const emps = data.employees;
@@ -86,7 +103,7 @@
             container.innerHTML = emps.map(e => `
                 <div class="emp-card glass-card" style="margin:0;border-radius:0;border:none;border-bottom:1px solid rgba(255,255,255,0.05);">
                     <div class="emp-avatar">👤</div>
-                    <div class="emp-info">
+                    <div class="emp-info" style="flex:1;">
                         <div class="emp-name">${e.name}</div>
                         <div class="emp-meta">
                             <span>💰 ${e.salary.toLocaleString('ar-EG')} ج.م</span>
@@ -94,19 +111,95 @@
                             <span>📝 ${e.last_request}</span>
                         </div>
                     </div>
-                    <div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
                         ${e.debt > 0
                             ? `<span class="badge badge-danger">🔴 دين: ${e.debt.toLocaleString('ar-EG')} ج.م</span>`
                             : `<span class="badge badge-success">✅ بدون دين</span>`
                         }
+                        <button class="print-invoice-btn" onclick='printInvoice(${JSON.stringify(e)})'>🧾 فاتورة</button>
                     </div>
                 </div>
             `).join('');
         }
 
+        function printInvoice(e) {
+            const netSalary = e.salary - e.debt;
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+                <html dir="rtl"><head><title>فاتورة راتب - ${e.name}</title><style>
+                    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+                    * { box-sizing:border-box; margin:0; padding:0; }
+                    body { font-family:'Cairo',Arial,sans-serif; direction:rtl; padding:40px; background:#fff; color:#1a1a2e; }
+                    .invoice-box { max-width:600px; margin:auto; border:2px solid #3b82f6; border-radius:12px; overflow:hidden; }
+                    .invoice-header { background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:white; padding:24px 30px; text-align:center; }
+                    .invoice-header h1 { font-size:1.5rem; font-weight:700; margin-bottom:4px; }
+                    .invoice-header p { font-size:0.9rem; opacity:0.85; }
+                    .invoice-body { padding:28px 30px; }
+                    .info-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f0f0f0; font-size:0.95rem; }
+                    .info-row:last-child { border-bottom:none; }
+                    .info-label { color:#666; }
+                    .info-value { font-weight:700; color:#1a1a2e; }
+                    .total-row { background:#f0f7ff; border-radius:8px; padding:14px 16px; margin-top:18px; display:flex; justify-content:space-between; align-items:center; }
+                    .total-label { font-size:1rem; font-weight:700; color:#3b82f6; }
+                    .total-value { font-size:1.3rem; font-weight:700; color:#1d4ed8; }
+                    .invoice-footer { text-align:center; padding:16px; background:#fafafa; font-size:0.78rem; color:#999; border-top:1px solid #eee; }
+                    @media print { body { padding:0; } }
+                </style></head><body>
+                <div class="invoice-box">
+                    <div class="invoice-header">
+                        <h1>☀️ Suez Sons</h1>
+                        <p>فاتورة راتب شهري</p>
+                    </div>
+                    <div class="invoice-body">
+                        <div class="info-row">
+                            <span class="info-label">اسم الموظف</span>
+                            <span class="info-value">${e.name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">المحل</span>
+                            <span class="info-value">${storeNameGlobal}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">جدول العمل</span>
+                            <span class="info-value">${e.schedule || '—'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">الراتب الأساسي</span>
+                            <span class="info-value">${e.salary.toLocaleString('ar-EG')} ج.م</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">الخصومات / الديون</span>
+                            <span class="info-value" style="color:${e.debt > 0 ? '#ef4444' : '#22c55e'};">
+                                ${e.debt > 0 ? '- ' + e.debt.toLocaleString('ar-EG') + ' ج.م' : 'لا يوجد'}
+                            </span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">💰 صافي الراتب</span>
+                            <span class="total-value">${netSalary.toLocaleString('ar-EG')} ج.م</span>
+                        </div>
+                    </div>
+                    <div class="invoice-footer">
+                        طُبع من نظام Suez Sons — ${new Date().toLocaleString('ar-EG')}
+                    </div>
+                </div>
+                <script>window.onload = () => { window.print(); }<\/script>
+                </body></html>
+            `);
+            printWin.document.close();
+        }
+
         function printEmployees() {
-            const table = document.querySelector('.table-wrapper table');
             const storeName = document.getElementById('store-name').textContent;
+            const cards = document.querySelectorAll('#emp-list .emp-card');
+            let rows = '';
+            cards.forEach(card => {
+                const name = card.querySelector('.emp-name')?.textContent || '';
+                const metas = card.querySelectorAll('.emp-meta span');
+                const salary = metas[0]?.textContent || '';
+                const schedule = metas[1]?.textContent || '';
+                const badge = card.querySelector('.badge')?.textContent || '';
+                rows += `<tr><td>${name}</td><td>${salary}</td><td>${schedule}</td><td>${badge}</td></tr>`;
+            });
             const printWin = window.open('', '_blank');
             printWin.document.write(`
                 <html dir="rtl"><head><title>طباعة الموظفين</title><style>
@@ -120,7 +213,10 @@
                 </style></head><body>
                 <h2>👥 قائمة الموظفين</h2>
                 <p><strong>${storeName}</strong></p>
-                <table>${table.innerHTML}</table>
+                <table>
+                    <tr><th>الاسم</th><th>الراتب</th><th>الجدول</th><th>الديون</th></tr>
+                    ${rows}
+                </table>
                 <p style="margin-top:30px;color:#999;font-size:12px;">طُبع من نظام Suez Sons - ${new Date().toLocaleString('ar-EG')}</p>
                 </body></html>
             `);

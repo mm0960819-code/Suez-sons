@@ -20,6 +20,6 @@
     "express-session": "^1.19.0",
     "better-sqlite3": "^9.0.0",
     
-    "express-rate-limit": "^7.0.0"
+  
   }
 }

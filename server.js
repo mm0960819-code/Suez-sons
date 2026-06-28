@@ -11,16 +11,7 @@ const app = express();
 // ===== Trust Railway Proxy =====
 app.set('trust proxy', 1);
 
-// ===== Rate Limiting =====const express = require('express');
-const path = require('path');
-const bcrypt = require('bcrypt');
-const session = require('express-session');
-const db = require('./db');
 
-const app = express();
-
-// ===== Trust Railway Proxy =====
-app.set('trust proxy', 1);
 
 // ===== Middleware =====
 app.use(express.urlencoded({ extended: true }));

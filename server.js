@@ -1,13 +1,25 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 const db = require('./db');
 
 const app = express();
 
 // ===== Trust Railway Proxy =====
 app.set('trust proxy', 1);
+
+// ===== Rate Limiting =====
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: 'محاولات كثيرة، انتظر 15 دقيقة' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/login', loginLimiter);
 
 // ===== Middleware =====
 app.use(express.urlencoded({ extended: true }));
